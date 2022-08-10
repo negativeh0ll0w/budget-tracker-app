@@ -1,12 +1,12 @@
+const CACHE_NAME = 'budget-tracker';
+const DATA_CACHE_NAME = 'budget-data';
+
 const FILES_TO_CACHE = [
     '/index.html',
     '/css/styles.css',
     '/js/index.js',
     '/icons/icon-192x192.png'
 ];
-
-const CACHE_NAME = 'budget-tracker-cache';
-const DATA_CACHE_NAME = 'budget-cache';
 
 // install service worker
 self.addEventListener('install', function(e) {
@@ -35,7 +35,7 @@ self.addEventListener('activate', function(e) {
     );
 })
 
-// Intercept fetch requests
+// use cache
 self.addEventListener('fetch', function(e) {
     if (e.request.url.includes('/api/')) {
         e.respondWith(
