@@ -1,13 +1,11 @@
 // create variable to hold db connection
 let db;
 
-// establish connection to indexdb database named 'budget_tracker' and set it to version 1
 const request = indexedDB.open('budget_tracker', 1);
 
-// this will emit if the database version changes
+// upgrade db if version changes 
 request.onupgradeneeded = function(e) {
     const db = e.target.result;
-
     db.createObjectStore('new_transaction', { autoIncrement: true });
 };
 
@@ -21,31 +19,27 @@ request.onsuccess = function(e) {
 };
 
 request.onerror = function(e) {
-    // log error here
     console.log(e.target.errorCode);
 };
 
-// this will be executed if an attempt to make a new transaction is made with no internet connection
+// offline functionality
 function saveRecord(record) {
-    // open transaction on db
-    const transaction = db.transaction(['new_transaction'], 'readwrite');
+    
+    const transaction = db.transaction(['transaction'], 'readwrite');
 
-    // access object store
-    const transactionObjectStore = transaction.objectStore('new_transaction');
+    const transactionObjectStore = transaction.objectStore('transaction');
 
-    // add record to store with add method
     transactionObjectStore.add(record);
 }
 
 function uploadTransaction() {
-    const transaction = db.transaction(['new_transaction'], 'readwrite');
+    const transaction = db.transaction(['transaction'], 'readwrite');
 
-    const transactionObjectStore = transaction.objectStore('new_transaction');
+    const transactionObjectStore = transaction.objectStore('transaction');
 
     const getAll = transactionObjectStore.getAll();
 
     getAll.onsuccess = function () {
-        // if there was data in the indexdb then send it to api server
         if (getAll.result.length > 0) {
             fetch('/api/transaction', {
                 method: 'POST',
@@ -60,16 +54,16 @@ function uploadTransaction() {
                 if (serverResponse.message) {
                     throw new Error(serverResponse);
                 }
-                // open one last transaction to delete stored objects after they've been sent
-                const transaction = db.transaction(['new_transaction'], 'readwrite');
-                const transactionObjectStore = transaction.objectStore('new_transaction');
+                const transaction = db.transaction(['transaction'], 'readwrite');
+                const transactionObjectStore = transaction.objectStore('transaction');
                 transactionObjectStore.clear();
 
-                alert('All transactions have been submitted!');
+                alert('Transactions submitted');
             })
             .catch(err => console.log(err));
         }
     };
 }
 
+// upload data when back online
 window.addEventListener('Online', uploadTransaction);
